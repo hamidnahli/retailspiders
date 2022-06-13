@@ -1,7 +1,12 @@
+import json
 from typing import Any, Dict
 
 import pandas as pd
+
 from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
+
+import requests
+from bs4 import BeautifulSoup
 
 
 def convert_file_to_list(filelocation):
@@ -47,3 +52,27 @@ def get_next_url(url: str, param: str, nxt: int):
     return next_url
 
 
+def get_ld_json(response: requests.Response):
+    soup = BeautifulSoup(response.content, 'html.parser')
+    lds = soup.findAll('script', {'type': 'application/ld+json'})
+    if lds:
+        for ld in lds:
+            if "Product" in ld.text:
+                return json.loads(ld.text)
+    return None
+
+
+def parse_json(ld: json):
+    """
+    Must return
+    dict_ = {
+        'sku': sku,
+        'title': title,
+        'description': description,
+        'price': price,
+        'currency': currency,
+        'brand': brand,
+        'image': image,
+        'product_url': self.product_url
+    }
+    """

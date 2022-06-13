@@ -1,0 +1,25 @@
+{
+  "@context": "http://schema.org/",
+  "@type": "Product",
+  "name": "Speakup Almond Toe Flats",
+  "image": "https:\/\/cdn.shopify.com\/s\/files\/1\/0267\/3737\/7324\/products\/PG.WNSPEAKUP2-BLK06.RZ_1024x1024.jpg?v=1635458716",
+  "description": "Best seller. Stay on point with the classic, trend-right style of our Speakup flats. This flattering, wear-with-anything almond-toe design is destined to be one of your go-to shoes this season.",
+  "brand": {
+    "@type": "Thing",
+    "name": "Nine West"
+  },
+  "sku": "196301246671",
+  "mpn": "196301246671",
+  "offers": {
+    "@type": "Offer",
+    "priceCurrency": "USD",
+    "price": 69.0,
+    "availability": "http://schema.org/InStock",
+    "url": "https://ninewest.com/products/speakup-almond-toe-flats-in-black-floral?variant=39652478451756",
+    "seller": {
+      "@type": "Organization",
+      "name": "Nine West"
+    },
+    "priceValidUntil": "2023-06-12"
+  }
+}
