@@ -1,18 +1,33 @@
 import requests
+import json
 
-from utils import get_ld_json, parse_json
+from utils import get_ld_json
 
 
 class Target:
-    def __init__(self, product_url):
-        self.product_url = product_url
+    reviews = []
+    info = None
 
-    def product_info(self):
-        response = requests.get(self.product_url)
+    @staticmethod
+    def _parse_json(ld: json):
+        ld = ld['@graph'][0]
+        return {
+            'sku': ld['sku'],
+            'title': ld['name'],
+            'description': ld['description'],
+            'price': ld['offers']['price'],
+            'currency': ld['offers']['priceCurrency'],
+            'brand': ld['brand'],
+            'image': ld['image'],
+        }
+
+    @classmethod
+    def product_info(cls, product_url):
+        response = requests.get(product_url)
         ld_json = get_ld_json(response)
-        data = parse_json(ld_json)
+        data = cls._parse_json(ld_json)
+        data['url'] = product_url
         return data
 
-    def product_reviews(self):
+    def product_review(self):
         ...
-

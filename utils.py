@@ -1,39 +1,10 @@
 import json
 from typing import Any, Dict
 
-import pandas as pd
-
 from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 
 import requests
 from bs4 import BeautifulSoup
-
-
-def convert_file_to_list(filelocation):
-    urls = None
-    if filelocation.endswith('.csv'):
-        df = pd.read_csv(filelocation)
-        urls = df['products'].to_list()
-    elif filelocation.endswith('.xlsx'):
-        df = pd.read_excel(filelocation)
-        urls = df['products'].to_list()
-    else:
-        print('Currently only csv and excel file format are supported')
-    return urls
-
-
-def save_as(data, data_type, extension):
-    df = None
-    if isinstance(data, dict):
-        df = pd.DataFrame(data, index=[0])
-    elif isinstance(data, list):
-        df = pd.DataFrame(data)
-    if extension == 'csv':
-        df.to_csv(f'{data_type}.csv')
-    elif extension == 'xlsx':
-        df.to_excel(f'{data_type}.xlsx')
-    elif extension == 'json':
-        df.to_json(f'{data_type}.json', orient="records", indent=4)
 
 
 def get_next_url(url: str, param: str, nxt: int):
@@ -60,19 +31,3 @@ def get_ld_json(response: requests.Response):
             if "Product" in ld.text:
                 return json.loads(ld.text)
     return None
-
-
-def parse_json(ld: json):
-    """
-    Must return
-    dict_ = {
-        'sku': sku,
-        'title': title,
-        'description': description,
-        'price': price,
-        'currency': currency,
-        'brand': brand,
-        'image': image,
-        'product_url': self.product_url
-    }
-    """

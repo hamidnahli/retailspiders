@@ -1,7 +1,7 @@
 from urllib.parse import urlparse
 import requests
 
-from spiders import utils
+import utils
 
 
 class Sephora:
