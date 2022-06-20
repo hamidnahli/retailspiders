@@ -1,6 +1,5 @@
 import requests
 import json
-
 from utils import get_ld_json
 
 
