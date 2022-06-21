@@ -6,6 +6,8 @@ from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 import requests
 from bs4 import BeautifulSoup
 
+# from items.debugging import app_logger as log
+
 
 def get_next_url(url: str, param: str, nxt: int):
     url_parse = urlparse(url)
@@ -30,4 +32,6 @@ def get_ld_json(response: requests.Response):
         for ld in lds:
             if "Product" in ld.text:
                 return json.loads(ld.text)
+    # else:
+    #     log.info(f'ld+json not found for {response.url}')
     return None
