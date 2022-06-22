@@ -185,4 +185,4 @@ fabric.properties
 .idea
 sample.json
 .DS_Store
-proxy.py
+items/proxy.py
