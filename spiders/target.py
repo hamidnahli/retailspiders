@@ -1,12 +1,10 @@
 import requests
 import json
 
-from utils import get_ld_json
+from items.utils import get_ld_json
 
 
 class Target:
-    reviews = []
-    info = None
 
     @staticmethod
     def _parse_json(ld: json):

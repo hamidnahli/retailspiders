@@ -1,9 +1,9 @@
 from urllib.parse import urlparse
 import requests
 
-import utils
+from items import utils
 
-
+BASE_URL = ''
 class Sephora:
     api_key = ""
     BASE_URL = 'https://www.sephora.com'
@@ -11,7 +11,7 @@ class Sephora:
     product_reviews = []
     productid = None
 
-    def __init__(self, url: str = None, productid: str = None):
+    def __init__(self, url, productid: str = None):
         self.url = url
         self.productid = productid
         if url:
