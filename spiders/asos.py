@@ -2,8 +2,7 @@ import requests
 import json
 from typing import List, Dict
 from dotenv import load_dotenv
-from items.utils import get_ld_json, get_shopify_variants, parse_stamped_reviews, global_headers
-
+from items.utils import get_ld_json, global_headers
 load_dotenv()
 
 class   Asos:
@@ -62,23 +61,41 @@ class   Asos:
         self.product_name = '+'.join(list(data['title']))
         self.product_sku = self.product_url.split('/')[-1]
 
-        # rid and rtype will be used later for scraping reviews.
-        #self.rid, self.rtype, self.product_variant = get_shopify_variants(response)
-
         # Updating the product info dictionary
         data['product_url'] = self.product_url
         data['spider'] = Asos.__name__.lower()
-        data['rtype'] = self.rtype
         self.product_info = data
-        print(data['rid'])
-        return ld_json
-    
-    def get_product_review(self) -> List:
-        if not self.product_info:
-            self.product_info = self.get_product_info()
+        return data
+        
+    def get_product_review(self):
+        reviews = []
+        review_containers = True
+        page = 1
+        self.product_info = self.get_product_info()
+        rid = self.product_info['rid']
+        while review_containers:
+            url = f'https://www.asos.com/api/product/reviews/v1/products/{rid}?offset={page}&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
+            response = requests.get(url)
+            data = response.json()
+            for ele in data['results']:
+                if ele['reviewText']:
+                    review_date = ele['submissionTime']
+                    review_author = ele['userNickname']
+                    review_location = ele['contentLocale']
+                    review_header = ele['title']
+                    review_body = ele['reviewText']
+                    
+                    review = {
+                        'date': review_date,
+                        'author': review_author,
+                        'location': review_location,
+                        'header': review_header,
+                        'body': review_body,
+                        #'thumbs_up': review_thumbs_up,
+                        #'thumbs_down': review_thumbs_down
+                    }
+                    reviews.append(review)
+            page += 1
+            return reviews
+        
 
-        rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku)
-        self.product_reviews = reviews
-        self.product_info['review_count'] = count
-        self.product_info['review_rating'] = rating
-        return reviews
