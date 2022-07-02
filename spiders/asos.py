@@ -10,7 +10,7 @@ class   Asos:
     product_variant = None
     product_reviews = None
 
-    def __init__(self, product_url, product_name=None, product_sku=None, rid=None, rtype=None):
+    def __init__(self, product_url, product_name=None, product_sku=None, product_id=None, rtype=None):
         if product_url.endswith('/'):
             self.product_url = product_url[:-1]
         elif 'pr_prod_strat' in product_url:
@@ -19,7 +19,7 @@ class   Asos:
             self.product_url = product_url
         self.product_name = product_name
         self.product_sku = product_sku
-        self.rid = rid
+        self.product_id = product_id
         self.rtype = rtype
 
     @staticmethod
@@ -48,7 +48,7 @@ class   Asos:
             'image' : ld['image'],
             'url' : ld['url'],
             'brand' : ld['brand']['name'],
-            'rid' : ld['productID'],
+            'product_id' : ld['productID'],
             'product_url' : ld['url'],
         }
 
@@ -56,10 +56,6 @@ class   Asos:
         response = requests.get(self.product_url, headers=global_headers())
         ld_json = get_ld_json(response)
         data = self._parse_json(ld_json)
-
-        # Assigning initial variables for later use.
-        self.product_name = '+'.join(list(data['title']))
-        self.product_sku = self.product_url.split('/')[-1]
 
         # Updating the product info dictionary
         data['product_url'] = self.product_url
@@ -69,14 +65,19 @@ class   Asos:
         
     def get_product_review(self):
         reviews = []
-        review_containers = True
-        page = 1
         self.product_info = self.get_product_info()
-        rid = self.product_info['rid']
-        while review_containers:
-            url = f'https://www.asos.com/api/product/reviews/v1/products/{rid}?offset={page}&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
+        product_id = self.product_info['product_id']
+
+        url = f'https://www.asos.com/api/product/reviews/v1/products/{product_id}?offset=1&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
+        response = requests.get(url)
+        data = response.json()
+        totalResults = data['totalResults']
+        
+        for offset in range(1,int(totalResults),100):
+            url = f'https://www.asos.com/api/product/reviews/v1/products/{product_id}?offset={offset}&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
             response = requests.get(url)
             data = response.json()
+
             for ele in data['results']:
                 if ele['reviewText']:
                     review_date = ele['submissionTime']
@@ -92,10 +93,8 @@ class   Asos:
                         'header': review_header,
                         'body': review_body,
                         #'thumbs_up': review_thumbs_up,
-                        #'thumbs_down': review_thumbs_down
+                        #'thumbs_down': review_thumbs_down,
                     }
                     reviews.append(review)
-            page += 1
-            return reviews
+        return reviews
         
-

@@ -46,5 +46,3 @@ def get_ld_json(response: requests.Response):
         log.info(f'ld+json not found for {response.url}')
     return None
 
-
-
