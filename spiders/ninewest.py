@@ -4,7 +4,8 @@ from typing import List, Dict
 
 from dotenv import load_dotenv
 
-from items.utils import get_ld_json, get_shopify_variants, parse_stamped_reviews
+from items.utils import get_ld_json, get_shopify_variants
+
 
 load_dotenv()
 

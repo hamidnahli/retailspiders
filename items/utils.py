@@ -41,18 +41,7 @@ def get_ld_json(response: requests.Response):
     return None
 
 
-# This should be a standard template for all shopify websites
-def get_shopify_variants(response: requests.Response):
-    soup = BeautifulSoup(response.content, 'html.parser')
-    scripts = soup.findAll('script')
-    script = [ele.text for ele in scripts if '"variants":' in ele.text][0]
-    str_json = [ele for ele in script.split(';') if '"variants":' in ele][0].strip()
-    str_json = str_json.replace('var meta = ', '')
-    data = json.loads(str_json)
-    variants = data['product']['variants']
-    rid = data['product']['id']
-    rtype = data['product']['type']
-    return rid, rtype, variants
+
 
 
 # Parsing reviews from stamped.oo
