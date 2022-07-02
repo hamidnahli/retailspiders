@@ -5,6 +5,7 @@ from typing import List, Dict
 from dotenv import load_dotenv
 
 from items.utils import get_ld_json, get_shopify_variants, parse_stamped_reviews
+from items.proxy import make_request
 
 load_dotenv()
 
@@ -71,12 +72,15 @@ class NineWest:
         }
 
     def get_product_info(self, proxy=False) -> Dict:
-        response = requests.get(self.product_url)
+        if proxy:
+            response = make_request(self.product_url)
+        else:
+            response = requests.get(self.product_url)
         ld_json = get_ld_json(response)
         data = self._parse_json(ld_json)
 
         # Assigning initial variables for later use.
-        self.product_name = '+'.join(list(data['title']))
+        self.product_name = '+'.join(data['title'].split())
         self.product_sku = self.product_url.split('/')[-1]
 
         # rid and rtype will be used later for scraping reviews.
@@ -90,11 +94,17 @@ class NineWest:
         self.product_info = data
         return data
 
-    def get_product_review(self) -> List:
+    def get_product_review(self, proxy=False) -> List:
         if not self.product_info:
-            self.product_info = self.get_product_info()
-
-        rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku)
+            if proxy:
+                self.product_info = self.get_product_info(proxy=True)
+            else:
+                self.product_info = self.get_product_info()
+        if proxy:
+            rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku,
+                                                           proxy=True)
+        else:
+            rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku)
         self.product_reviews = reviews
         self.product_info['review_count'] = count
         self.product_info['review_rating'] = rating

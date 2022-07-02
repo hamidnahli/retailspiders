@@ -1,16 +1,33 @@
 import json
 import os
+import requests
 from typing import Any, Dict
-
 from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 
-import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from usp.tree import sitemap_tree_for_homepage
+from celery import Celery
 
 from items.debugging import app_logger as log
+from items.proxy import start_session
 
 load_dotenv()
+
+app = Celery('tasks', broker='sqs://', broker_transport_options={'region': 'us-east-2'})
+
+
+# return all product urls using the website's robots.txt
+# identifier is the keyword that identify a product url
+@app.task
+def parse_robots_txt(url, identifier=None):
+    urls = []
+    tree = sitemap_tree_for_homepage(url)
+    for page in tree.all_pages():
+        urls.append(page.url)
+    if identifier:
+        urls = [url for url in urls if identifier in url]
+    return urls
 
 
 def get_next_url(url: str, param: str, nxt: int):
@@ -56,7 +73,11 @@ def get_shopify_variants(response: requests.Response):
 
 
 # Parsing reviews from stamped.oo
-def parse_stamped_reviews(rid, rtype, product_name, product_sku):
+def parse_stamped_reviews(rid, rtype, product_name, product_sku, proxy=False):
+    session = None
+    gateway = None
+    if proxy:
+        gateway, session = start_session('https://stamped.io')
     reviews = []
     review_containers = True
     api_key = os.getenv('ninewest_stamped_api')
@@ -66,7 +87,10 @@ def parse_stamped_reviews(rid, rtype, product_name, product_sku):
     count = 0
     while review_containers:
         url = f'https://stamped.io/api/widget?productId={rid}&productName={product_name}&productType={rtype}&productSKU={product_sku}&page={page}&apiKey={api_key}&storeUrl={store_key}&take=16&sort=rece'
-        response = requests.get(url)
+        if proxy:
+            response = session.get(url)
+        else:
+            response = requests.get(url)
         data = response.json()
         rating = data['rating']
         count = data['count']
@@ -94,5 +118,8 @@ def parse_stamped_reviews(rid, rtype, product_name, product_sku):
                     'thumbs_down': review_thumbs_down
                 }
                 reviews.append(review)
+        log.info(f'{len(reviews)}/{count} reviews scraped for rid:{rid}, name:{product_sku}')
         page += 1
+    if proxy:
+        gateway.shutdown()
     return rating, count, reviews
