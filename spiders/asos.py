@@ -92,8 +92,6 @@ class   Asos:
                         'location': review_location,
                         'header': review_header,
                         'body': review_body,
-                        #'thumbs_up': review_thumbs_up,
-                        #'thumbs_down': review_thumbs_down,
                     }
                     reviews.append(review)
         return reviews
