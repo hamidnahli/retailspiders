@@ -351,7 +351,7 @@ global_headers = {
 }
 
 
-def make_request(url):
+def make_request(url, headers=False):
     domain = urlparse(url).netloc
     # Create gateway object and initialise in AWS
     gateway = ApiGateway('https://' + domain)
@@ -359,7 +359,10 @@ def make_request(url):
     # Assign gateway to session
     session = requests.Session()
     session.mount('https://' + domain, gateway)
-    response = session.get(url, headers=global_headers)
+    if headers:
+        response = session.get(url, headers=global_headers)
+    else:
+        response = session.get(url)
     gateway.shutdown()
     return response
 
