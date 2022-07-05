@@ -6,7 +6,7 @@ from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-from usp.tree import sitemap_tree_for_homepage
+#from usp.tree import sitemap_tree_for_homepage
 from celery import Celery
 
 from items.debugging import app_logger as log
@@ -22,12 +22,12 @@ app = Celery('tasks', broker='sqs://', broker_transport_options={'region': 'us-e
 @app.task
 def parse_robots_txt(url, identifier=None):
     urls = []
-    tree = sitemap_tree_for_homepage(url)
-    for page in tree.all_pages():
-        urls.append(page.url)
-    if identifier:
-        urls = [url for url in urls if identifier in url]
-    return urls
+    #tree = sitemap_tree_for_homepage(url)
+    #for page in tree.all_pages():
+    #    urls.append(page.url)
+    #if identifier:
+    #    urls = [url for url in urls if identifier in url]
+    #return urls
 
 
 def get_next_url(url: str, param: str, nxt: int):
@@ -123,3 +123,15 @@ def parse_stamped_reviews(rid, rtype, product_name, product_sku, proxy=False):
     if proxy:
         gateway.shutdown()
     return rating, count, reviews
+
+def global_headers():
+    return {
+            'sec-ch-ua': '" Not A;Brand";v="99", "Chromium";v="96", "Google Chrome";v="96"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"',
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36',
+            'sec-fetch-user': '?1',
+            'sec-fetch-dest': 'document',
+            'accept-encoding': 'gzip, deflate, br',
+            'accept-language': 'en-US,en;q=0.9,ar;q=0.8,fr;q=0.7,de;q=0.6',
+            }
