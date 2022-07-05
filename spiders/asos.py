@@ -7,20 +7,19 @@ load_dotenv()
 
 class   Asos:
     product_info = None
-    product_variant = None
-    product_reviews = None
 
-    def __init__(self, product_url, product_name=None, product_sku=None, product_id=None, rtype=None):
+    def __init__(self, product_url, product_name=None, product_sku=None, product_id=None):
         if product_url.endswith('/'):
             self.product_url = product_url[:-1]
-        elif 'pr_prod_strat' in product_url:
+
+        elif 'prd' in product_url:
             self.product_url = product_url.split('?')[0]
+            
         else:
             self.product_url = product_url
         self.product_name = product_name
         self.product_sku = product_sku
         self.product_id = product_id
-        self.rtype = rtype
 
     @staticmethod
     def _parse_json(ld: json):
