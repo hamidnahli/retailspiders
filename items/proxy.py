@@ -11,7 +11,6 @@ import requests
 from items.debugging import app_logger as log
 
 # import http
-#
 # http.client.HTTPConnection.debuglevel = 2
 
 MAX_IPV4 = ipaddress.IPv4Address._ALL_ONES
