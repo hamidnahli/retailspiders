@@ -1,11 +1,13 @@
 import requests
 import json
 from typing import List, Dict
-
+from datetime import datetime
 from dotenv import load_dotenv
 
 from items.utils import get_ld_json, get_shopify_variants, parse_stamped_reviews
 from items.proxy import make_request
+from items.debugging import app_logger as log
+from items.models import NineWestModel
 
 load_dotenv()
 
@@ -26,6 +28,7 @@ class NineWest:
         self.product_sku = product_sku
         self.rid = rid
         self.rtype = rtype
+        self.db = NineWestModel()
 
     @staticmethod
     def _parse_json(ld: json) -> Dict:
@@ -68,7 +71,9 @@ class NineWest:
             'image': ld['image'],
             'category': None,
             'review_count': None,
-            'review_rating': None
+            'review_rating': None,
+            'created': str(datetime.now()),
+            'last_updated': str(datetime.now())
         }
 
     def get_product_info(self, proxy=False) -> Dict:
@@ -88,10 +93,12 @@ class NineWest:
 
         # Updating the product info dictionary
         data['product_url'] = self.product_url
-        data['spider'] = NineWest.__name__.lower()
+        data['spider'] = 'ninewest'
         data['rid'] = self.rid
         data['rtype'] = self.rtype
         self.product_info = data
+        log.info(f'{data["sku"]}, url: {self.product_url} - scrapped successfully')
+        self.db.insert(data, 'ninewest_product_info')
         return data
 
     def get_product_review(self, proxy=False) -> List:
@@ -102,10 +109,13 @@ class NineWest:
                 self.product_info = self.get_product_info()
         if proxy:
             rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku,
-                                                           proxy=True)
+                                                           self.product_info['sku'], proxy=True)
         else:
-            rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku)
+            rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku,
+                                                           self.product_info['sku'])
         self.product_reviews = reviews
         self.product_info['review_count'] = count
         self.product_info['review_rating'] = rating
+        self.db.insert(self.product_info, 'ninewest_product_info')
+        self.db.review_bulk_insert(reviews, 'ninewest_product_review')
         return reviews

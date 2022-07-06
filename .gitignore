@@ -185,3 +185,5 @@ fabric.properties
 .idea
 sample.json
 .DS_Store
+run.py
+db.sql

@@ -3,6 +3,7 @@ import os
 import requests
 from typing import Any, Dict
 from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
+from datetime import datetime
 
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -19,7 +20,7 @@ app = Celery('tasks', broker='sqs://', broker_transport_options={'region': 'us-e
 
 # return all product urls using the website's robots.txt
 # identifier is the keyword that identify a product url
-@app.task
+@app.task()
 def parse_robots_txt(url, identifier=None):
     urls = []
     tree = sitemap_tree_for_homepage(url)
@@ -73,7 +74,7 @@ def get_shopify_variants(response: requests.Response):
 
 
 # Parsing reviews from stamped.oo
-def parse_stamped_reviews(rid, rtype, product_name, product_sku, proxy=False):
+def parse_stamped_reviews(rid, rtype, product_name, product_sku, sku, proxy=False):
     session = None
     gateway = None
     if proxy:
@@ -102,20 +103,25 @@ def parse_stamped_reviews(rid, rtype, product_name, product_sku, proxy=False):
                 review_date = review_container.find('div', {'class': 'created'}).text
                 review_author = review_container.find('strong', {'class': 'author'}).text
                 review_location = review_container.find('div', {'class': 'review-location'}).text
-                review_header = review_container.find('h3', {'class': 'stamped-review-header-title'}).text
+                review_header = review_container.find('h3', {'class': 'stamped-review-header-title'}).text.strip()
                 review_body = review_container.find('p', {'class': 'stamped-review-content-body'}).text
                 review_thumbs_up = review_container.find('i', {'class': 'stamped-fa stamped-fa-thumbs-up'}).text.strip()
                 review_thumbs_down = review_container.find('i',
                                                            {'class': 'stamped-fa stamped-fa-thumbs-down'}).text.strip()
+                review_rating = review_container.findAll('i', {'class': 'stamped-fa stamped-fa-star'})
 
                 review = {
-                    'date': review_date,
+                    'sku': sku,
+                    'review_date': review_date,
                     'author': review_author,
                     'location': review_location,
                     'header': review_header,
                     'body': review_body,
+                    'rating': len(review_rating),
                     'thumbs_up': review_thumbs_up,
-                    'thumbs_down': review_thumbs_down
+                    'thumbs_down': review_thumbs_down,
+                    'created': str(datetime.now()),
+                    'last_updated': str(datetime.now())
                 }
                 reviews.append(review)
         log.info(f'{len(reviews)}/{count} reviews scraped for rid:{rid}, name:{product_sku}')
