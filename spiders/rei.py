@@ -469,22 +469,19 @@ class Rei:
         reviews = []
         product_id = self.product_info['sku']
 
-        def get_response(product_id,offset=False):
+        def get_response(product_id,offset=0):
             url = f'https://api.bazaarvoice.com/data/batch.json?passkey=thvpbov9ywkkl4nkhbeq0wm1i&apiversion=5.5&displaycode=15372-en_us&resource.q0=reviews&filter.q0=isratingsonly%3Aeq%3Afalse&filter.q0=productid%3Aeq%3A{product_id}&filter.q0=contentlocale%3Aeq%3Aen*%2Cen_US&sort.q0=submissiontime%3Adesc&stats.q0=reviews&filteredstats.q0=reviews&include.q0=authors%2Cproducts%2Ccomments&filter_reviews.q0=contentlocale%3Aeq%3Aen*%2Cen_US&filter_reviewcomments.q0=contentlocale%3Aeq%3Aen*%2Cen_US&filter_comments.q0=contentlocale%3Aeq%3Aen*%2Cen_US&limit.q0=100&offset.q{offset}=0&limit_comments.q0=20&callback=bv_351_1793'
             response = requests.get(url).text
             data = response.replace('bv_351_1793(','')[:-1]
             data = json.loads(data)
             totalResults = data['BatchedResults']['q0']['TotalResults']
-            return data,totalResults
+            return data, totalResults
 
         data, totalResults = get_response(product_id,offset=0)
 
         for offset in range(0,int(totalResults),10):
-            data = get_response(product_id,offset=offset)
-            print(type(data))
 
-            with open('sample.txt','w') as f:
-                f.write(data)
+            data = get_response(product_id,offset=offset)
 
             review_date = data[0]['BatchedResults']['q0']['Results'][0]['SubmissionTime']
             review_author = data[0]['BatchedResults']['q0']['Results'][0]['UserNickname']
@@ -507,5 +504,3 @@ class Rei:
 
 
         return reviews
-
-
