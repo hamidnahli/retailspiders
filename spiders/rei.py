@@ -2,10 +2,10 @@ from h11 import Data
 import requests
 import json
 from typing import List, Dict
-from dotenv import load_dotenv
 from items.utils import get_ld_json
 from bs4 import BeautifulSoup
 
+from dotenv import load_dotenv
 load_dotenv()
 
 class Rei:
