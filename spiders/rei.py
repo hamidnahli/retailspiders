@@ -6,9 +6,6 @@ from items.utils import get_ld_json, parse_bazaarvoice_reviews
 from bs4 import BeautifulSoup
 import os
 
-from dotenv import load_dotenv
-load_dotenv()
-
 class Rei:
     product_info = None
 
