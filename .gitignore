@@ -187,3 +187,5 @@ sample.json
 .DS_Store
 run.py
 db.sql
+ninewest_failed.json
+

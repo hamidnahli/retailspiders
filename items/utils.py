@@ -74,11 +74,7 @@ def get_shopify_variants(response: requests.Response):
 
 
 # Parsing reviews from stamped.oo
-def parse_stamped_reviews(rid, rtype, product_name, product_sku, sku, proxy=False):
-    session = None
-    gateway = None
-    if proxy:
-        gateway, session = start_session('https://stamped.io')
+def parse_stamped_reviews(rid, rtype, product_name, product_sku, sku, session=None):
     reviews = []
     review_containers = True
     api_key = os.getenv('ninewest_stamped_api')
@@ -88,7 +84,7 @@ def parse_stamped_reviews(rid, rtype, product_name, product_sku, sku, proxy=Fals
     count = 0
     while review_containers:
         url = f'https://stamped.io/api/widget?productId={rid}&productName={product_name}&productType={rtype}&productSKU={product_sku}&page={page}&apiKey={api_key}&storeUrl={store_key}&take=16&sort=rece'
-        if proxy:
+        if session:
             response = session.get(url)
         else:
             response = requests.get(url)
@@ -126,6 +122,4 @@ def parse_stamped_reviews(rid, rtype, product_name, product_sku, sku, proxy=Fals
                 reviews.append(review)
         log.info(f'{len(reviews)}/{count} reviews scraped for rid:{rid}, name:{product_sku}')
         page += 1
-    if proxy:
-        gateway.shutdown()
     return rating, count, reviews
