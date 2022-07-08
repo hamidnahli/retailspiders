@@ -2,16 +2,15 @@ from h11 import Data
 import requests
 import json
 from typing import List, Dict
-from items.utils import get_ld_json
+from items.utils import get_ld_json, parse_bazaarvoice_reviews
 from bs4 import BeautifulSoup
+import os
 
 from dotenv import load_dotenv
 load_dotenv()
 
 class Rei:
     product_info = None
-    product_variant = None
-    product_reviews = None
 
     def __init__(self, product_url, product_name=None, product_sku=None):
         if product_url.endswith('/'):
@@ -465,21 +464,12 @@ class Rei:
         return data
 
     def get_product_review(self) -> List:
-        reviews = []
+        product_reviews = []
         product_id = self.product_sku
-        passkey = 'thvpbov9ywkkl4nkhbeq0wm1i'
+        totalResults = parse_bazaarvoice_reviews(product_id,offset=0)[1]
 
-        url = f'https://api.bazaarvoice.com/data/batch.json?passkey={passkey}&apiversion=5.5&displaycode=15372-en_us&resource.q0=reviews&filter.q0=isratingsonly%3Aeq%3Afalse&filter.q0=productid%3Aeq%3A{product_id}&filter.q0=contentlocale%3Aeq%3Aen*%2Cen_US&sort.q0=submissiontime%3Adesc&stats.q0=reviews&filteredstats.q0=reviews&include.q0=authors%2Cproducts%2Ccomments&filter_reviews.q0=contentlocale%3Aeq%3Aen*%2Cen_US&filter_reviewcomments.q0=contentlocale%3Aeq%3Aen*%2Cen_US&filter_comments.q0=contentlocale%3Aeq%3Aen*%2Cen_US&limit.q0=100&offset.q0=0&limit_comments.q0=20&callback=bv_351_1793'
-        response = requests.get(url).text
-        data = response.replace('bv_351_1793(','')[:-1]
-        data = json.loads(data)
-        totalResults = data['BatchedResults']['q0']['TotalResults']
-
-        for offset in range(0,int(totalResults),10): 
-            url = f'https://api.bazaarvoice.com/data/batch.json?passkey={passkey}&apiversion=5.5&displaycode=15372-en_us&resource.q0=reviews&filter.q0=isratingsonly%3Aeq%3Afalse&filter.q0=productid%3Aeq%3A{product_id}&filter.q0=contentlocale%3Aeq%3Aen*%2Cen_US&sort.q0=submissiontime%3Adesc&stats.q0=reviews&filteredstats.q0=reviews&include.q0=authors%2Cproducts%2Ccomments&filter_reviews.q0=contentlocale%3Aeq%3Aen*%2Cen_US&filter_reviewcomments.q0=contentlocale%3Aeq%3Aen*%2Cen_US&filter_comments.q0=contentlocale%3Aeq%3Aen*%2Cen_US&limit.q0=100&offset.q0={offset}&limit_comments.q0=20&callback=bv_351_1793'
-            response = requests.get(url).text
-            data = response.replace('bv_351_1793(','')[:-1]
-            data = json.loads(data)
+        for offset in range(0,totalResults,100): 
+            data = parse_bazaarvoice_reviews(product_id,offset)[0]
 
             for ele in data['BatchedResults']['q0']['Results']:
                 review_date = ele['SubmissionTime']
@@ -499,6 +489,6 @@ class Rei:
                         'thumbs_up': review_thumbs_up,
                         'thumbs_down': review_thumbs_down
                     }
-                reviews.append(review)
-        return reviews
+                product_reviews.append(review)      
+        return product_reviews
 
