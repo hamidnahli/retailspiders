@@ -1,8 +1,9 @@
+from numpy import product
 import requests
 import json
 from typing import List, Dict
 from dotenv import load_dotenv
-from items.utils import get_ld_json
+from items.utils import get_ld_json,parse_yotpo_reviews
 from bs4 import BeautifulSoup
 import os
 load_dotenv()
@@ -83,71 +84,7 @@ class Glossier:
         return scripts
     
     def get_product_review(self):
-        product_reviews = []
-        key = os.getenv('key')
-        product_url = f'https://api.yotpo.com/v1/reviews/{key}/filter.json'
-        headers = {
-         'Content-Type': 'application/json'
-        }
-        
-        payload = json.dumps({
-    
-            "domain_key": "lidstar",
-            "crfs": [],
-            "sortings": [
-            {
-                "sort_by": "date",
-                "ascending": False,
-            }
-            ],
-            "page": 1,
-            "per_page": 150,
-            })
-        
-        response = requests.post(product_url,data=payload,headers=headers)
-        data = response.json()
-        id_product=data['response']['products'][0]['id']
-        rtype=data['response']['product_tags'][0]['tag']
-        pages_total = data['response']['pagination']['total']
-        pages_total = pages_total//150
-
-        for page in range(0,pages_total):
-            payload = json.dumps({
-                                    "domain_key": "lidstar",
-                                    "crfs": [],
-                                    "sortings": [
-                                    {
-                                        "sort_by": "date",
-                                        "ascending": False,
-                                    }
-                                    ],
-                                    "page": page,
-                                    "per_page": 150,
-                                })
-            response = requests.post(product_url,data=payload,headers=headers)
-            data = response.json()
-        
-            for ele in data['response']['reviews']:
-                review_comment = ele['content']
-                review_headline = ele['title']
-                review_date = ele['created_at']
-                review_author = ele['user']['display_name']
-                review_thumbs_up = ele['votes_up']
-                review_thumbs_down = ele['votes_down']
-
-                review = {
-                    'rtype':rtype,
-                    'id':id_product,
-                    'date': review_date,
-                    'author': review_author,
-                    'header': review_headline,
-                    'body': review_comment,
-                    'thumbs_up': review_thumbs_up,
-                    'thumbs_down': review_thumbs_down,
-                    'pages_total': pages_total
-                }
-
-                product_reviews.append(review)
+        product_reviews = parse_yotpo_reviews()
         return product_reviews
 
     
