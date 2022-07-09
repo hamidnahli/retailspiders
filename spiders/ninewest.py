@@ -5,7 +5,6 @@ from datetime import datetime
 from dotenv import load_dotenv
 
 from items.utils import get_ld_json, get_shopify_variants, parse_stamped_reviews
-from items.proxy import make_request
 from items.debugging import app_logger as log
 from items.tasks import ninewest_insert_info, ninewest_insert_review
 
@@ -63,7 +62,7 @@ class NineWest:
         return {
             'sku': ld['sku'],
             'title': ld['name'],
-            'description': ld['description'],
+            'description': ld.get('description'),
             'price': ld['offers']['price'],
             'currency': ld['offers']['priceCurrency'],
             'brand': ld['brand']['name'],

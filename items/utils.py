@@ -52,7 +52,7 @@ def get_ld_json(response: requests.Response):
     lds = soup.findAll('script', {'type': 'application/ld+json'})
     if lds:
         for ld in lds:
-            if "Product" in ld.text:
+            if '"Product"' in ld.text:
                 return json.loads(ld.text)
     else:
         log.info(f'ld+json not found for {response.url}')

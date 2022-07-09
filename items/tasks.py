@@ -3,7 +3,7 @@ from usp.tree import sitemap_tree_for_homepage
 
 from items.models import NineWestModel
 
-app = Celery('tasks', broker='sqs://', broker_transport_options={'region': 'us-east-2'})
+app = Celery('tasks', broker='amqp://guest@localhost//')
 
 
 @app.task
