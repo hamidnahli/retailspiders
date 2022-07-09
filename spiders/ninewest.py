@@ -102,10 +102,7 @@ class NineWest:
 
     def get_product_review(self) -> List:
         if not self.product_info:
-            if self.session:
-                self.product_info = self.get_product_info()
-            else:
-                self.product_info = self.get_product_info()
+            self.product_info = self.get_product_info()
         if self.session:
             rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku,
                                                            self.product_info['sku'], session=self.session)
