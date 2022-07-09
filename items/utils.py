@@ -61,4 +61,5 @@ def parse_bazaarvoice_reviews(product_id,offset=0):
     data = response.replace('bv_351_1793(','')[:-1]
     data = json.loads(data)
     totalResults = data['BatchedResults']['q0']['TotalResults']
+    
     return [data,totalResults]
