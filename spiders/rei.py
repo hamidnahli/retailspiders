@@ -461,31 +461,5 @@ class Rei:
         return data
 
     def get_product_review(self) -> List:
-        product_reviews = []
-        product_id = self.product_sku
-        totalResults = parse_bazaarvoice_reviews(product_id,offset=0)[1]
-
-        for offset in range(0,totalResults,100): 
-            data = parse_bazaarvoice_reviews(product_id,offset)[0]
-
-            for ele in data['BatchedResults']['q0']['Results']:
-                review_date = ele['SubmissionTime']
-                review_author = ele['UserNickname']
-                review_location = ele['UserLocation']
-                review_header = ele['Title']
-                review_body = ele['ReviewText']
-                review_thumbs_up = ele['TotalPositiveFeedbackCount']
-                review_thumbs_down = ele['TotalNegativeFeedbackCount']
-
-                review = {
-                        'date': review_date,
-                        'author': review_author,
-                        'location': review_location,
-                        'header': review_header,
-                        'body': review_body,
-                        'thumbs_up': review_thumbs_up,
-                        'thumbs_down': review_thumbs_down
-                    }
-                product_reviews.append(review)      
-        return product_reviews
-
+        reviews = parse_bazaarvoice_reviews(self)
+        return reviews
