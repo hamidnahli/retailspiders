@@ -5,6 +5,7 @@ from typing import List, Dict
 from items.utils import get_ld_json, parse_bazaarvoice_reviews
 from bs4 import BeautifulSoup
 import os
+from datetime import datetime
 
 class Rei:
     product_info = None
@@ -446,6 +447,8 @@ class Rei:
             'seller':ld['offers'][0]['seller']['name'],
             'review_count': ld['aggregateRating']['reviewCount'],
             'review_rating': ld['aggregateRating']['ratingValue'],
+            'created': str(datetime.now()),
+            'last_updated': str(datetime.now())
         }
     
     def get_product_info(self, proxy=False) -> Dict:
