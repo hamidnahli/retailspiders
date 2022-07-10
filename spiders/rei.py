@@ -1,14 +1,12 @@
-from h11 import Data
 import requests
 import json
 from typing import List, Dict
 from items.utils import get_ld_json, parse_bazaarvoice_reviews
-from bs4 import BeautifulSoup
-import os
 from datetime import datetime
 
 class Rei:
     product_info = None
+    product_reviews = None
 
     def __init__(self, product_url, product_name=None, product_sku=None):
         if product_url.endswith('/'):
@@ -451,7 +449,7 @@ class Rei:
             'last_updated': str(datetime.now())
         }
     
-    def get_product_info(self, proxy=False) -> Dict:
+    def get_product_info(self) -> Dict:
         response = requests.get(self.product_url)
         ld_json = get_ld_json(response)
         data = self._parse_json(ld_json)
@@ -464,5 +462,10 @@ class Rei:
         return data
 
     def get_product_review(self) -> List:
-        reviews = parse_bazaarvoice_reviews(self)
-        return reviews
+        if self.product_sku:
+            product_reviews = parse_bazaarvoice_reviews(self)
+        else:
+            self.product_info = self.get_product_info()
+            product_reviews = parse_bazaarvoice_reviews(self)
+        
+        return product_reviews
