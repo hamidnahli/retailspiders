@@ -1,7 +1,5 @@
 import json
 import os
-from typing import Any, Dict
-from urllib.parse import urlparse, parse_qsl, urlunparse, urlencode
 import requests
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -20,21 +18,6 @@ def global_headers():
             'accept-language': 'en-US,en;q=0.9,ar;q=0.8,fr;q=0.7,de;q=0.6',
             }
 
-def get_next_url(url: str, param: str, nxt: int):
-    url_parse = urlparse(url)
-    query = url_parse.query
-    url_dict: Dict[str, Any] = dict(parse_qsl(query))
-    if isinstance(url_dict[param], list):
-        page = int(url_dict[param][0]) + nxt
-    else:
-        page = int(url_dict[param]) + nxt
-    params = {param: page}
-    url_dict.update(params)
-    url_new_query = urlencode(url_dict)
-    url_parse = url_parse._replace(query=url_new_query)
-    next_url = urlunparse(url_parse)
-    return next_url
-
 def get_ld_json(response: requests.Response):
     soup = BeautifulSoup(response.content, 'html.parser')
     lds = soup.findAll('script', {'type': 'application/ld+json'})
@@ -46,3 +29,35 @@ def get_ld_json(response: requests.Response):
         log.info(f'ld+json not found for {response.url}')
     return None
 
+def parse_api_reviews(self):
+    product_id = self.product_id
+    reviews = []
+    def _get_totalResults(product_id):
+        url = f'https://www.asos.com/api/product/reviews/v1/products/{product_id}?offset=1&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
+        response = requests.get(url)
+        data = response.json()
+        totalResults = data['totalResults']
+        return totalResults
+        
+    for offset in range(1,int(_get_totalResults(product_id)),100):
+        url = f'https://www.asos.com/api/product/reviews/v1/products/{product_id}?offset={offset}&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
+        response = requests.get(url)
+        data = response.json()
+
+        for ele in data['results']:
+            if ele['reviewText']:
+                review_date = ele['submissionTime']
+                review_author = ele['userNickname']
+                review_location = ele['contentLocale']
+                review_header = ele['title']
+                review_body = ele['reviewText']
+                
+                review = {
+                    'date': review_date,
+                    'author': review_author,
+                    'location': review_location,
+                    'header': review_header,
+                    'body': review_body,
+                }
+                reviews.append(review)
+    return reviews

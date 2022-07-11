@@ -2,11 +2,13 @@ import requests
 import json
 from typing import List, Dict
 from dotenv import load_dotenv
-from items.utils import get_ld_json, global_headers
+from items.utils import get_ld_json, global_headers, parse_api_reviews
 load_dotenv()
+from datetime import datetime
 
 class   Asos:
     product_info = None
+    product_review = None
 
     def __init__(self, product_url, product_name=None, product_sku=None, product_id=None):
         if product_url.endswith('/'):
@@ -49,6 +51,8 @@ class   Asos:
             'brand' : ld['brand']['name'],
             'product_id' : ld['productID'],
             'product_url' : ld['url'],
+            'created': str(datetime.now()),
+            'last_updated': str(datetime.now())
         }
 
     def get_product_info(self, proxy=False) -> Dict:
@@ -60,38 +64,15 @@ class   Asos:
         data['product_url'] = self.product_url
         data['spider'] = Asos.__name__.lower()
         self.product_info = data
+        self.product_id = self.product_info['product_id']
         return data
         
     def get_product_review(self):
-        reviews = []
-        self.product_info = self.get_product_info()
-        product_id = self.product_info['product_id']
+        if self.product_id:
+            product_review = parse_api_reviews(self)
+        else:
+            self.product_info = self.get_product_info()
+            product_review = parse_api_reviews(self)
 
-        url = f'https://www.asos.com/api/product/reviews/v1/products/{product_id}?offset=1&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
-        response = requests.get(url)
-        data = response.json()
-        totalResults = data['totalResults']
-        
-        for offset in range(1,int(totalResults),100):
-            url = f'https://www.asos.com/api/product/reviews/v1/products/{product_id}?offset={offset}&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc'
-            response = requests.get(url)
-            data = response.json()
-
-            for ele in data['results']:
-                if ele['reviewText']:
-                    review_date = ele['submissionTime']
-                    review_author = ele['userNickname']
-                    review_location = ele['contentLocale']
-                    review_header = ele['title']
-                    review_body = ele['reviewText']
-                    
-                    review = {
-                        'date': review_date,
-                        'author': review_author,
-                        'location': review_location,
-                        'header': review_header,
-                        'body': review_body,
-                    }
-                    reviews.append(review)
-        return reviews
+        return product_review
         

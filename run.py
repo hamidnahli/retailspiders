@@ -5,5 +5,3 @@ if __name__ == '__main__':
     p = Asos(product_url=url)
     print(p.get_product_info())
     print(p.get_product_review())
-
-#https://www.asos.com/api/product/reviews/v1/products/200964288?offset=1&limit=100&include=Products&store=US&lang=en-US&filteredStats=reviews&sort=SubmissionTime:desc
