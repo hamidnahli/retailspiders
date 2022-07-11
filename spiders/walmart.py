@@ -129,8 +129,8 @@ class Walmart:
         body = {
             "query": "query ReviewsById( $itemId:String! $page:Int $sort:String $limit:Int $filters:[String]$lookup:String $aspect:Int ){reviews( itemId:$itemId page:$page limit:$limit sort:$sort filters:$filters lookupId:$lookup aspectId:$aspect ){activePage activeSort aspectId aspects{...aspectFragment}negativeCount positiveCount averageOverallRating customerReviews{...customerReviewsFragment}topPositiveReview{...customerReviewsFragment}topNegativeReview{...customerReviewsFragment}lookupId overallRatingRange percentageOneCount percentageTwoCount percentageThreeCount percentageFourCount percentageFiveCount ratingValueOneCount ratingValueTwoCount ratingValueThreeCount ratingValueFourCount ratingValueFiveCount recommendedPercentage roundedAverageOverallRating totalReviewCount aspectReviewsCount pagination{...paginationFragment}}product(itemId:$itemId){name canonicalUrl category{path{name url}}sellerId sellerName priceInfo{currentPrice{priceString}}}}fragment aspectFragment on Aspect{id name score snippetCount}fragment customerReviewsFragment on CustomerReview{authorId badges{badgeType contentType id glassBadge{id text}}userLocation negativeFeedback positiveFeedback rating recommended reviewId reviewSubmissionTime reviewText reviewTitle reviewAspectStart reviewAspectEnd reviewSentimentStart reviewSentimentEnd snippetFromTitle showRecommended syndicationSource{contentLink logoImageUrl name}userNickname externalSource photos{caption id sizes{normal{...reviewPhotoSizeFragment}thumbnail{...reviewPhotoSizeFragment}}}}fragment reviewPhotoSizeFragment on ReviewPhotoSize{id url}fragment paginationFragment on Pagination{currentSpan next{num url active gap}pages{num url active gap}previous{num url active gap}total}",
             "variables": {
-                "itemId": "148754190",
-                "page": 1,
+                "itemId": self.product_info['sku'],
+                "page": page,
                 "sort": "relevancy",
                 "limit": 20,
                 "filters": [],
@@ -154,18 +154,7 @@ class Walmart:
                 response = self.session.get(
                     url='https://www.walmart.com/orchestra/home/graphql',
                     headers=reviews_headers,
-                    json={
-                        "query": "query ReviewsById( $itemId:String! $page:Int $sort:String $limit:Int $filters:[String]$lookup:String $aspect:Int ){reviews( itemId:$itemId page:$page limit:$limit sort:$sort filters:$filters lookupId:$lookup aspectId:$aspect ){activePage activeSort aspectId aspects{...aspectFragment}negativeCount positiveCount averageOverallRating customerReviews{...customerReviewsFragment}topPositiveReview{...customerReviewsFragment}topNegativeReview{...customerReviewsFragment}lookupId overallRatingRange percentageOneCount percentageTwoCount percentageThreeCount percentageFourCount percentageFiveCount ratingValueOneCount ratingValueTwoCount ratingValueThreeCount ratingValueFourCount ratingValueFiveCount recommendedPercentage roundedAverageOverallRating totalReviewCount aspectReviewsCount pagination{...paginationFragment}}product(itemId:$itemId){name canonicalUrl category{path{name url}}sellerId sellerName priceInfo{currentPrice{priceString}}}}fragment aspectFragment on Aspect{id name score snippetCount}fragment customerReviewsFragment on CustomerReview{authorId badges{badgeType contentType id glassBadge{id text}}userLocation negativeFeedback positiveFeedback rating recommended reviewId reviewSubmissionTime reviewText reviewTitle reviewAspectStart reviewAspectEnd reviewSentimentStart reviewSentimentEnd snippetFromTitle showRecommended syndicationSource{contentLink logoImageUrl name}userNickname externalSource photos{caption id sizes{normal{...reviewPhotoSizeFragment}thumbnail{...reviewPhotoSizeFragment}}}}fragment reviewPhotoSizeFragment on ReviewPhotoSize{id url}fragment paginationFragment on Pagination{currentSpan next{num url active gap}pages{num url active gap}previous{num url active gap}total}",
-                        "variables": {
-                            "itemId": '148754190',
-                            "page": page,
-                            "sort": "relevancy",
-                            "limit": 20,
-                            "filters": [],
-                            "lookup": "",
-                            "aspect": 0
-                        }
-                    }
+                    json=body
                 )
                 data = response.json()
                 customer_reviews = data['data']['reviews']['customerReviews']
