@@ -463,9 +463,11 @@ class Rei:
 
     def get_product_review(self) -> List:
         if self.product_sku:
-            product_reviews = parse_bazaarvoice_reviews(self)
+            product_reviews = parse_bazaarvoice_reviews(self,self.product_sku)
         else:
             self.product_info = self.get_product_info()
-            product_reviews = parse_bazaarvoice_reviews(self)
+            product_reviews = parse_bazaarvoice_reviews(self,self.product_sku)
         
         return product_reviews
+
+    

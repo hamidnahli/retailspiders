@@ -16,6 +16,7 @@ class NineWestModel:
     def __init__(self):
         self.connection = self.connect()
 
+
     def insert(self, data: dict, table: str):
         connection = self.connect()
         cursor = connection.cursor()
@@ -43,6 +44,7 @@ class NineWestModel:
         finally:
             self.close(connection)
 
+
     @staticmethod
     def connect():
         try:
@@ -51,12 +53,13 @@ class NineWestModel:
                 user=os.getenv('aws_postgres_username'),
                 password=os.getenv('aws_postgres_password'),
                 host=os.getenv('aws_postgres_endpoint'),
-                port='5432'
+                port='5455'
             )
             return connection
         except (Exception, psycopg2.Error) as e:
             log.error(e)
         return False
+
 
     @staticmethod
     def close(connection: psycopg2.extensions.connection):
@@ -68,11 +71,13 @@ class NineWestModel:
             except (Exception, psycopg2.Error) as e:
                 log.error(e)
 
+
     @staticmethod
     def _get_column_value(data):
         columns = data.keys()
         values = [data[column] for column in columns]
         return columns, values
+
 
     def review_bulk_insert(self, data: list, table: str):
         connection = self.connect()
@@ -101,6 +106,7 @@ class NineWestModel:
             cursor.executemany(insert_statement, sql_data)
             connection.commit()
             log.info(f'reviews for {sku} updated')
+
 
     @staticmethod
     def remove_non_utf8(data: list, update=False):

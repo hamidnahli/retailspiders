@@ -2,6 +2,7 @@ import json
 import os
 import requests
 from typing import Any, Dict, List
+from datetime import datetime
 
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
@@ -21,7 +22,7 @@ def get_ld_json(response: requests.Response):
         log.info(f'ld+json not found for {response.url}')
     return None
 
-def parse_bazaarvoice_reviews(self):
+def parse_bazaarvoice_reviews(self,sku):
     product_reviews = []
     product_id = self.product_sku
 
@@ -49,13 +50,17 @@ def parse_bazaarvoice_reviews(self):
             review_thumbs_down = ele['TotalNegativeFeedbackCount']
 
             review = {
+                    'sku': sku,
                     'date': review_date,
                     'author': review_author,
                     'location': review_location,
                     'header': review_header,
                     'body': review_body,
+                    'rating': sku,
                     'thumbs_up': review_thumbs_up,
-                    'thumbs_down': review_thumbs_down
+                    'thumbs_down': review_thumbs_down,
+                    'created': str(datetime.now()),
+                    'last_updated': str(datetime.now())
                 }
             product_reviews.append(review)      
     
