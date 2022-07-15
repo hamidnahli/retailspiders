@@ -1,6 +1,7 @@
 from spiders.rei import Rei
 from test import SpiderModel
 
+
 if __name__ == '__main__':
     url = 'https://www.rei.com/product/146801/patagonia-capilene-cool-daily-hoodie-mens'
     p = Rei(product_url=url)
