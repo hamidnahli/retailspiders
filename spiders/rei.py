@@ -434,15 +434,15 @@ class Rei:
             }
         '''
         return {
+            'sku' : ld['sku'],
             'title' : ld['name'],
             'description' : ld.get('description'),
-            'brand' : ld['brand']['name'],
-            'price' : ld['offers'][0]['price'],
-            'image' : ld['image'],
+            'price' : float(ld['offers'][0]['price']),
             'currency' : ld['offers'][0]['priceCurrency'],
-            'sku' : ld['sku'],
-            'category' : ld['category'],
+            'brand' : ld['brand']['name'],
             'seller':ld['offers'][0]['seller']['name'],
+            'image' : ld['image'],
+            'category' : ld['category'],
             'review_count': ld['aggregateRating']['reviewCount'],
             'review_rating': ld['aggregateRating']['ratingValue'],
             'created': str(datetime.now()),

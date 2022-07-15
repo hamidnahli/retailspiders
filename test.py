@@ -1,6 +1,9 @@
+from typing import List
 import psycopg2
 from items.debugging import app_logger as log
-from spiders.rei import Rei
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 class SpiderModel:
 
@@ -11,16 +14,15 @@ class SpiderModel:
     def connect():
         try:
             connection = psycopg2.connect(
-                user="postgresUser",
-                password="postgresPW",
-                host="127.0.0.1",
-                port="5455",
-                database="postgresDB"
+                user=os.getenv('docker_postgres_username'),
+                password=os.getenv('docker_postgres_password'),
+                host=os.getenv('docker_postgres_host'),
+                port='5455',
+                database=os.getenv('docker_postgres_db')
             )
             return connection
         except (Exception, psycopg2.Error) as e:
             log.error(e)
-            
 
     def create_tables(self):
         commands = (
@@ -28,7 +30,7 @@ class SpiderModel:
                 SKU SERIAL PRIMARY KEY, 
                 TITLE VARCHAR,
                 DESCRIPTION VARCHAR,
-                PRICE INT,
+                PRICE FLOAT,
                 CURRENCY VARCHAR,
                 BRAND VARCHAR,
                 SELLER VARCHAR,
@@ -37,7 +39,9 @@ class SpiderModel:
                 REVIEW_COUNT FLOAT,
                 REVIEW_RATING FLOAT,
                 CREATED DATE,
-                LAST_UPDATED DATE
+                LAST_UPDATED DATE,
+                PRODUCT_URL VARCHAR,
+                SPIDER VARCHAR
                 )
             """,
             """ CREATE TABLE spider_product_review (
@@ -73,39 +77,18 @@ class SpiderModel:
                 connection.close()
     
 
-    def insert(self, data:list):
-        # connect to the PostgreSQL server
+    def insert(self, data_review:List,data_product):
         connection = self.connect()
         cur = connection.cursor()
-        if not data:
+        
+        if not data_review:
             log.info('there is no reviews to insert to database')
             return False
 
-        print(type(data))
-
-        for d in data:
-            print(list(d.values()))
-            cur.execute("INSERT INTO spider_product_review (SKU, REVIEW_DATE, AUTHOR, LOCATION, HEADER, BODY, RATING, THUMPS_UP, THUMPS_DOWN, CREATED, LAST_UPDATED) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",list(d.values()))
-            
+        for dr in data_review:
+            cur.execute("INSERT INTO spider_product_review (SKU, REVIEW_DATE, AUTHOR, LOCATION, HEADER, BODY, RATING, THUMPS_UP, THUMPS_DOWN, CREATED, LAST_UPDATED) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",list(dr.values()))
+        
+        cur.execute("INSERT INTO spider_product_info (SKU, TITLE, DESCRIPTION, PRICE, CURRENCY, BRAND, SELLER, IMAGE, CATEGORY, REVIEW_COUNT, REVIEW_RATING, CREATED, LAST_UPDATED, PRODUCT_URL, SPIDER) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)",list(data_product.values()))
         connection.commit()
         connection.close()
-
-
-        # info_insert_query = "INSERT INTO spider_product_info (SKU, TITLE, TITLE, DESCRIPTION, PRICE, CURRENCY, BRAND, SELLER, IMAGE, CATEGORY, REVIEW_COUNT, REVIEWW_RATING, CREATED, LAST_UPDATED) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-        # record_to_insert = (5, 'One Plus 6', 950)
-        # cur.execute(info_insert_query, record_to_insert)
-
-
-
-if __name__ == '__main__':
-    url = 'https://www.rei.com/product/146801/patagonia-capilene-cool-daily-hoodie-mens'
-    p = Rei(product_url=url)
-    #print(p.get_product_info())
-    data = p.get_product_review()
-
-p = SpiderModel()
-p.create_tables()
-p.insert(data)
-
-
 
