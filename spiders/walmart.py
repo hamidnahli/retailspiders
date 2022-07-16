@@ -52,7 +52,7 @@ class Walmart:
     def __init__(self, product_url, session=None):
         self.session = session
         if '?' in product_url:
-            self.product_url = product_url.spli('?')[0]
+            self.product_url = product_url.split('?')[0]
         else:
             self.product_url = product_url
 

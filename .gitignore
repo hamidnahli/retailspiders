@@ -188,4 +188,6 @@ sample.json
 run.py
 db.sql
 ninewest_failed.json
+spiders/walmart.py
+apis/
 

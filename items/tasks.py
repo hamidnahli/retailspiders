@@ -1,7 +1,7 @@
 from celery import Celery
 from usp.tree import sitemap_tree_for_homepage
 
-from items.models import NineWestModel
+from dba.ninewestmodel import NineWestModel
 
 app = Celery('tasks', broker='amqp://guest@localhost//')
 
