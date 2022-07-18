@@ -3,12 +3,15 @@ import json
 from typing import List, Dict
 from items.utils import get_ld_json, parse_bazaarvoice_reviews
 from datetime import datetime
+from items.proxy import make_request
+from items.debugging import app_logger as log
 
 class Rei:
     product_info = None
     product_reviews = None
+    product_sku = None
 
-    def __init__(self, product_url, product_name=None, product_sku=None):
+    def __init__(self, product_url, product_name = None, product_sku = None, session = None):
         if product_url.endswith('/'):
             self.product_url = product_url[:-1]
         else:
@@ -16,6 +19,8 @@ class Rei:
 
         self.product_name = product_name
         self.product_sku = product_sku
+        self.session = session
+
 
     @staticmethod
     def _parse_json(ld: json):
@@ -434,7 +439,7 @@ class Rei:
             }
         '''
         return {
-            'sku' : ld['sku'],
+            'sku' : ld.get('sku'),
             'title' : ld['name'],
             'description' : ld.get('description'),
             'price' : float(ld['offers'][0]['price']),
@@ -449,8 +454,13 @@ class Rei:
             'last_updated': str(datetime.now())
         }
     
+    
     def get_product_info(self) -> Dict:
-        response = requests.get(self.product_url)
+        if self.session:
+            response = self.session.get(self.product_url)
+        else:
+            response = requests.get(self.product_url)
+            
         ld_json = get_ld_json(response)
         data = self._parse_json(ld_json)
 
@@ -459,15 +469,20 @@ class Rei:
         data['spider'] = Rei.__name__.lower()
         self.product_info = data
         self.product_sku = data['sku']
+        log.info(f'{data["sku"]}, url: {self.product_url} - scrapped successfully')
         return data
 
-    def get_product_review(self) -> List:
-        if self.product_sku:
-            product_reviews = parse_bazaarvoice_reviews(self,self.product_sku)
-        else:
-            self.product_info = self.get_product_info()
-            product_reviews = parse_bazaarvoice_reviews(self,self.product_sku)
+
+    def get_product_review(self, proxy=False) -> List:
         
-        return product_reviews
+        if not self.product_info:
+            if proxy:
+                self.product_info = self.get_product_info(proxy=True)
+            else:
+                self.product_info = self.get_product_info()
+                
+        reviews = parse_bazaarvoice_reviews(self,self.product_sku)
+        self.product_reviews = reviews
+        return reviews
 
     

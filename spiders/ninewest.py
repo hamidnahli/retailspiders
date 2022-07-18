@@ -1,11 +1,12 @@
 import requests
 import json
 from typing import List, Dict
-
+from datetime import datetime
 from dotenv import load_dotenv
 
 from items.utils import get_ld_json, get_shopify_variants, parse_stamped_reviews
-from items.proxy import make_request
+from items.debugging import app_logger as log
+from items.tasks import ninewest_insert_info, ninewest_insert_review
 
 load_dotenv()
 
@@ -15,7 +16,7 @@ class NineWest:
     product_variant = None
     product_reviews = None
 
-    def __init__(self, product_url, product_name=None, product_sku=None, rid=None, rtype=None):
+    def __init__(self, product_url, product_name=None, product_sku=None, rid=None, rtype=None, session=None):
         if product_url.endswith('/'):
             self.product_url = product_url[:-1]
         elif 'pr_prod_strat' in product_url:
@@ -26,6 +27,7 @@ class NineWest:
         self.product_sku = product_sku
         self.rid = rid
         self.rtype = rtype
+        self.session = session
 
     @staticmethod
     def _parse_json(ld: json) -> Dict:
@@ -60,7 +62,7 @@ class NineWest:
         return {
             'sku': ld['sku'],
             'title': ld['name'],
-            'description': ld['description'],
+            'description': ld.get('description'),
             'price': ld['offers']['price'],
             'currency': ld['offers']['priceCurrency'],
             'brand': ld['brand']['name'],
@@ -68,14 +70,17 @@ class NineWest:
             'image': ld['image'],
             'category': None,
             'review_count': None,
-            'review_rating': None
+            'review_rating': None,
+            'created': str(datetime.now()),
+            'last_updated': str(datetime.now())
         }
 
-    def get_product_info(self, proxy=False) -> Dict:
-        if proxy:
-            response = make_request(self.product_url)
+    def get_product_info(self) -> Dict:
+        if self.session:
+            response = self.session.get(self.product_url)
         else:
             response = requests.get(self.product_url)
+            
         ld_json = get_ld_json(response)
         data = self._parse_json(ld_json)
 
@@ -88,24 +93,26 @@ class NineWest:
 
         # Updating the product info dictionary
         data['product_url'] = self.product_url
-        data['spider'] = NineWest.__name__.lower()
+        data['spider'] = type(self).__name__
         data['rid'] = self.rid
         data['rtype'] = self.rtype
         self.product_info = data
+        log.info(f'{data["sku"]}, url: {self.product_url} - scrapped successfully')
+        ninewest_insert_info.delay(data, 'ninewest_product_info')
         return data
 
-    def get_product_review(self, proxy=False) -> List:
+    def get_product_review(self) -> List:
         if not self.product_info:
-            if proxy:
-                self.product_info = self.get_product_info(proxy=True)
-            else:
-                self.product_info = self.get_product_info()
-        if proxy:
+            self.product_info = self.get_product_info()
+        if self.session:
             rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku,
-                                                           proxy=True)
+                                                           self.product_info['sku'], session=self.session)
         else:
-            rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku)
+            rating, count, reviews = parse_stamped_reviews(self.rid, self.rtype, self.product_name, self.product_sku,
+                                                           self.product_info['sku'])
         self.product_reviews = reviews
         self.product_info['review_count'] = count
         self.product_info['review_rating'] = rating
+        ninewest_insert_info.delay(self.product_info, 'ninewest_product_info')
+        ninewest_insert_review.delay(reviews, 'ninewest_product_review')
         return reviews

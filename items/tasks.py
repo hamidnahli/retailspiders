@@ -1,7 +1,9 @@
 from celery import Celery
 from usp.tree import sitemap_tree_for_homepage
 
-app = Celery('tasks', broker='sqs://', broker_transport_options={'region': 'us-east-2'})
+#from dba.ninewestmodel import NineWestModel
+
+app = Celery('tasks', broker='amqp://guest@localhost//')
 
 
 @app.task
@@ -13,3 +15,15 @@ def parse_robots_txt(url, identifier=None):
     if identifier:
         urls = [url for url in urls if identifier in url]
     return urls
+
+
+# @app.task
+# def ninewest_insert_info(data, table):
+#     nw = NineWestModel()
+#     nw.insert(data, table)
+
+
+# @app.task
+# def ninewest_insert_review(data, table):
+#     nw = NineWestModel()
+#     nw.review_bulk_insert(data, table)

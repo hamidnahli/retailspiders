@@ -1,11 +1,15 @@
+import os
 from typing import List
 import psycopg2
+from psycopg2.extensions import AsIs
+from psycopg2 import errors
 from items.debugging import app_logger as log
 from dotenv import load_dotenv
-import os
+from datetime import datetime
+
 load_dotenv()
 
-class SpiderModel:
+class ReiModel:
 
     def __init__(self):
         self.connection = self.connect()
@@ -23,6 +27,7 @@ class SpiderModel:
             return connection
         except (Exception, psycopg2.Error) as e:
             log.error(e)
+
 
     def create_tables(self):
         commands = (
@@ -76,6 +81,13 @@ class SpiderModel:
             if connection is not None:
                 connection.close()
     
+    
+    @staticmethod
+    def _get_column_value(data):
+        columns = data.keys()
+        values = [data[column] for column in columns]
+        return columns, values
+
 
     def insert(self, data_review:List,data_product):
         connection = self.connect()
@@ -92,3 +104,13 @@ class SpiderModel:
         connection.commit()
         connection.close()
 
+
+    @staticmethod
+    def close(connection: psycopg2.extensions.connection):
+        if connection:
+            try:
+                connection.cursor().close()
+                connection.close()
+                log.info(f'connection to server closed')
+            except (Exception, psycopg2.Error) as e:
+                log.error(e)
